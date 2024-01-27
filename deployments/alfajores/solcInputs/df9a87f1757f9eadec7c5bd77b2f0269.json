@@ -1,0 +1,35 @@
+{
+  "language": "Solidity",
+  "sources": {
+    "contracts/Social.sol": {
+      "content": "// SPDX-License-Identifier: MIT\npragma solidity 0.8.0;\n\ncontract SocialMedia {\n    address public owner;\n\n    struct User {\n        string username;\n        address userAddress;\n        bool isRegistered;\n    }\n\n    mapping(address => User) public users;\n\n    struct Post {\n        address author;\n        string content;\n        uint256 timestamp;\n        uint256 likes;\n        uint256 commentsCount;\n    }\n\n    struct Comment {\n        address commenter;\n        string content;\n        uint256 timestamp;\n    }\n\n    mapping(uint256 => mapping(uint256 => Comment)) public postComments;\n    mapping(uint256 => uint256) public postCommentsCount;\n\n    Post[] public posts;\n\n    event UserRegistered(address indexed userAddress, string username);\n    event PostCreated(address indexed author, string content, uint256 timestamp);\n    event PostLiked(address indexed liker, uint256 indexed postId);\n    event CommentAdded(address indexed commenter, uint256 indexed postId, string content, uint256 timestamp);\n\n    modifier onlyRegisteredUser() {\n        require(users[msg.sender].isRegistered, \"User is not registered\");\n        _;\n    }\n\n    modifier onlyOwner() {\n        require(msg.sender == owner, \"Only owner can call this function\");\n        _;\n    }\n\n    constructor() {\n        owner = msg.sender;\n    }\n\n    function registerUser(string memory _username) external {\n        require(!users[msg.sender].isRegistered, \"User is already registered\");\n        require(bytes(_username).length > 0, \"Username should not be empty\");\n\n        users[msg.sender] = User({\n            username: _username,\n            userAddress: msg.sender,\n            isRegistered: true\n        });\n\n        emit UserRegistered(msg.sender, _username);\n    }\n\n    function createPost(string memory _content) external onlyRegisteredUser {\n        require(bytes(_content).length > 0, \"Content should not be empty\");\n\n        posts.push(Post({\n            author: msg.sender,\n            content: _content,\n            timestamp: block.timestamp,\n            likes: 0,\n            commentsCount: 0\n        }));\n\n        emit PostCreated(msg.sender, _content, block.timestamp);\n    }\n\n    function likePost(uint256 _postId) external onlyRegisteredUser {\n        require(_postId < posts.length, \"Post does not exist\");\n\n        Post storage post = posts[_postId];\n        post.likes++;\n\n        emit PostLiked(msg.sender, _postId);\n    }\n\n    function addComment(uint256 _postId, string memory _content) external onlyRegisteredUser {\n        require(_postId < posts.length, \"Post does not exist\");\n        require(bytes(_content).length > 0, \"Comment should not be empty\");\n\n        uint256 commentId = postCommentsCount[_postId];\n        postComments[_postId][commentId] = Comment({\n            commenter: msg.sender,\n            content: _content,\n            timestamp: block.timestamp\n        });\n\n        postCommentsCount[_postId]++;\n        posts[_postId].commentsCount++;\n\n        emit CommentAdded(msg.sender, _postId, _content, block.timestamp);\n    }\n\n    function getPostsCount() external view returns (uint256) {\n        return posts.length;\n    }\n\n    function getPost(uint256 _postId) external view returns (\n        address author,\n        string memory content,\n        uint256 timestamp,\n        uint256 likes,\n        uint256 commentsCount\n    ) {\n        require(_postId < posts.length, \"Post does not exist\");\n        Post memory post = posts[_postId];\n        return (post.author, post.content, post.timestamp, post.likes, post.commentsCount);\n    }\n\n    function getComment(uint256 _postId, uint256 _commentId) external view returns (\n        address commenter,\n        string memory content,\n        uint256 timestamp\n    ) {\n        require(_postId < posts.length, \"Post does not exist\");\n        require(_commentId < postCommentsCount[_postId], \"Comment does not exist\");\n\n        Comment memory comment = postComments[_postId][_commentId];\n        return (comment.commenter, comment.content, comment.timestamp);\n    }\n}\n"
+    }
+  },
+  "settings": {
+    "optimizer": {
+      "enabled": false,
+      "runs": 200
+    },
+    "outputSelection": {
+      "*": {
+        "*": [
+          "abi",
+          "evm.bytecode",
+          "evm.deployedBytecode",
+          "evm.methodIdentifiers",
+          "metadata",
+          "devdoc",
+          "userdoc",
+          "storageLayout",
+          "evm.gasEstimates"
+        ],
+        "": [
+          "ast"
+        ]
+      }
+    },
+    "metadata": {
+      "useLiteralContent": true
+    }
+  }
+}
