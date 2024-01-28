@@ -5,8 +5,8 @@ require('dotenv').config()
 module.exports = async function(){
     // automatic abi and address updates to frontend upon deployment
         console.log('-----------------updating--------frontend-------------parameters');
-        const ABI = './social_frontend/app/variables/abi.json'  // abi location
-        const ADDRESS = './social_frontend/app/variables/address.json' // contract address location
+        const ABI = './client/app/variables/abi.json'  // abi location
+        const ADDRESS = './client/app/variables/address.json' // contract address location
 
         const contract = await hre.ethers.getContractFactory('SocialMedia')
         const deploy = await contract.deploy()
