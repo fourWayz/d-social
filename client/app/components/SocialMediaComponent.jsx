@@ -74,9 +74,11 @@ function SocialMediaComponent() {
   const registerUser = async () => {
     try {
       const address = await wallet.getAddress();
-      await contract.registerUser(username, { from: address });
+      const tx = await contract.registerUser(username, { from: address });
+      await tx.wait()
       setMessage('User registered successfully.');
       setUsername('');
+      fetchRegisteredUser()
     } catch (error) {
       console.error(error);
       setMessage(error.message);
@@ -85,9 +87,11 @@ function SocialMediaComponent() {
 
   const createPost = async () => {
     try {
-      await contract.connect(wallet).createPost(content);
+      const tx = await contract.connect(wallet).createPost(content);
+      await tx.wait()
       setMessage('Post created successfully.');
       setContent('');
+      getPosts()
     } catch (error) {
       console.error(error);
       setMessage(error.message);
@@ -96,7 +100,8 @@ function SocialMediaComponent() {
 
   const likePost = async (postId) => {
     try {
-      await contract.connect(wallet).likePost(postId);
+      const tx = await contract.connect(wallet).likePost(postId);
+      await tx.wait()
       setMessage('Post liked successfully.');
       await getPosts(); // Refresh posts after liking
     } catch (error) {
@@ -108,9 +113,10 @@ function SocialMediaComponent() {
 
   const addComment = async (postId, comment) => {
     try {
-      await contract.connect(wallet).addComment(postId, comment);
+      const tx = await contract.connect(wallet).addComment(postId, comment);
+      await tx.wait()
       setMessage('Comment added successfully.');
-      await getPosts();
+      getPosts();
       setCommentText('')
     } catch (error) {
       console.error(error);
