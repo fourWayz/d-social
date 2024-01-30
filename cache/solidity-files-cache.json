@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/workspaces/d-social/contracts/Social.sol": {
-      "lastModificationDate": 1706360193022,
-      "contentHash": "217106b6a0750bfaacdbb42d9abbba66",
+      "lastModificationDate": 1706456070758,
+      "contentHash": "83c764153ad2457dfb1d51264fd461fe",
       "sourceName": "contracts/Social.sol",
       "solcConfig": {
         "version": "0.8.0",

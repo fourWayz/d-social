@@ -94,6 +94,12 @@ describe('SocialMedia Contract', function () {
     expect(events[0].args.content).to.equal(commentContent);
   });
 
-  // Add more tests for other functions
+  it('should return correct user details by address', async function () {
+    await socialMedia.connect(user1).registerUser('user1');
+    const userDetails = await socialMedia.getUserByAddress(user1.address);
+    expect(userDetails.userAddress).to.equal(user1.address);
+    expect(userDetails.isRegistered).to.equal(true);
+  });
+  
 
 });

@@ -63,6 +63,12 @@ contract SocialMedia {
         emit UserRegistered(msg.sender, _username);
     }
 
+    
+    function getUserByAddress(address _userAddress) external view returns (User memory) {
+        require(users[_userAddress].isRegistered, "User not found");
+        return users[_userAddress];
+    }
+
     function createPost(string memory _content) external onlyRegisteredUser {
         require(bytes(_content).length > 0, "Content should not be empty");
 
