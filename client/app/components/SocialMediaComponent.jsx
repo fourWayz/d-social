@@ -1,10 +1,23 @@
-"use client"
-import React, { useState, useEffect } from 'react';
-import { useContract } from '../../lib/ContractContext';
-import { ethers } from 'ethers';
-// import logo from '../assets/logo.png';
+/**
+ * Social Media Component for a decentralized platform frontend.
+ * Manages user registration, post creation, liking posts, commenting, and fetching posts.
+ * @module SocialMediaComponent
+ * @function
+ */
 
+"use client";
+
+import React, { useState, useEffect } from 'react';
+import { ethers } from 'ethers';
+import { useContract } from '../../lib/ContractContext';
+
+/**
+ * @function SocialMediaComponent
+ * @description React component for the social media platform.
+ * @returns {JSX.Element} Rendered component.
+ */
 function SocialMediaComponent() {
+  // State variables
   const { contract } = useContract();
   const [username, setUsername] = useState('');
   const [content, setContent] = useState('');
@@ -13,9 +26,12 @@ function SocialMediaComponent() {
   const [posts, setPosts] = useState([]);
   const [wallet, setWallet] = useState(null);
   const [registeredUser, setRegisteredUser] = useState(null);
-  const [commentText, setCommentText] = useState(''); // State for comment text
+  const [commentText, setCommentText] = useState('');
 
-
+  /**
+   * @function useEffect
+   * @description Effect to connect to the wallet on component mount.
+   */
   useEffect(() => {
     async function connectToWallet() {
       try {
@@ -31,11 +47,14 @@ function SocialMediaComponent() {
         console.error(error);
       }
     }
-    
+
     connectToWallet();
   }, []);
 
-  // fetch registered user onMount
+  /**
+   * @function useEffect
+   * @description Effect to fetch registered user on component mount.
+   */
   useEffect(() => {
     async function fetchRegisteredUser() {
       try {
@@ -55,7 +74,10 @@ function SocialMediaComponent() {
     fetchRegisteredUser();
   }, [wallet]);
 
-  // fetch post onMount
+  /**
+   * @function useEffect
+   * @description Effect to fetch posts on component mount.
+   */
   useEffect(() => {
     async function fetchPosts() {
       try {
@@ -71,37 +93,50 @@ function SocialMediaComponent() {
     }
   }, [contract]);
 
+  /**
+   * @function registerUser
+   * @description Function to register a user.
+   */
   const registerUser = async () => {
     try {
       const address = await wallet.getAddress();
       const tx = await contract.registerUser(username, { from: address });
-      await tx.wait()
+      await tx.wait();
       setMessage('User registered successfully.');
       setUsername('');
-      fetchRegisteredUser()
+      fetchRegisteredUser();
     } catch (error) {
       console.error(error);
       setMessage(error.message);
     }
   };
 
+  /**
+   * @function createPost
+   * @description Function to create a post.
+   */
   const createPost = async () => {
     try {
       const tx = await contract.connect(wallet).createPost(content);
-      await tx.wait()
+      await tx.wait();
       setMessage('Post created successfully.');
       setContent('');
-      getPosts()
+      getPosts();
     } catch (error) {
       console.error(error);
       setMessage(error.message);
     }
   };
 
+  /**
+   * @function likePost
+   * @description Function to like a post.
+   * @param {number} postId - The ID of the post to like.
+   */
   const likePost = async (postId) => {
     try {
       const tx = await contract.connect(wallet).likePost(postId);
-      await tx.wait()
+      await tx.wait();
       setMessage('Post liked successfully.');
       await getPosts(); // Refresh posts after liking
     } catch (error) {
@@ -110,20 +145,29 @@ function SocialMediaComponent() {
     }
   };
 
-
+  /**
+   * @function addComment
+   * @description Function to add a comment to a post.
+   * @param {number} postId - The ID of the post to comment on.
+   * @param {string} comment - The text content of the comment.
+   */
   const addComment = async (postId, comment) => {
     try {
       const tx = await contract.connect(wallet).addComment(postId, comment);
-      await tx.wait()
+      await tx.wait();
       setMessage('Comment added successfully.');
       getPosts();
-      setCommentText('')
+      setCommentText('');
     } catch (error) {
       console.error(error);
       setMessage(error.message);
     }
   };
 
+  /**
+   * @function getPosts
+   * @description Function to fetch all posts.
+   */
   const getPosts = async () => {
     try {
       const count = await contract.getPostsCount();
@@ -145,11 +189,12 @@ function SocialMediaComponent() {
     }
   };
 
+  // JSX for the component
   return (
     <div className="container mt-5">
-      {/* navbar section */}
+      {/* Navbar section */}
       <nav className="navbar navbar-expand-lg navbar-light bg-light">
-        <div className="container-fluid">
+      <div className="container-fluid">
           <a className="navbar-brand" href="#">Social Media</a>
           <div className="collapse navbar-collapse" id="navbarSupportedContent">
             <ul className="navbar-nav me-auto mb-2 mb-lg-0">
@@ -163,12 +208,12 @@ function SocialMediaComponent() {
         </div>
       </nav>
 
-      {/* registration section  */}
+      {/* Registration section */}
       {!registeredUser && (
         <div className="row mt-3">
           <div className="col-md-6">
             <div className="card">
-              <div className="card-body">
+            <div className="card-body">
                 <h5 className="card-title">Create Account</h5>
                 <div className="mb-3">
                   <input type="text" className="form-control" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
@@ -180,11 +225,11 @@ function SocialMediaComponent() {
         </div>
       )}
 
-      {/* create post section */}
+      {/* Create post section */}
       {registeredUser && (
         <div className="row mt-3">
-        <div className="col-md-6">
-          <div className="card">
+          <div className="col-md-6">
+            <div className="card">
             <div className="card-body">
               <h5 className="card-title">Create Post</h5>
               <div className="mb-3">
@@ -192,21 +237,20 @@ function SocialMediaComponent() {
               </div>
               <button className="btn btn-primary" onClick={createPost} disabled={isLoading}>Create Post</button>
             </div>
+            </div>
           </div>
         </div>
-        </div>
       )}
-     
-    
-      {/* post section */}
+
+      {/* Post section */}
       <div className="mt-3">
         {message && <div className="alert alert-info" role="alert">{message}</div>}
         <h3>Posts</h3>
         <div className="row">
           {posts.map((post, index) => (
             <div className="col-md-6 mb-3" key={index}>
-              <div className="card shadow p-2 ">
-                <div className="card-body">
+              <div className="card shadow p-2">
+              <div className="card-body">
                   <h6 className="card-title" style={{'color':'darkgrey'}}>Author : {post.author.toString()}</h6>
                   <p className="card-text" style={{'color':'darkgrey'}}>{post.content}</p>
                   <p className="card-text" style={{'color':'darkgrey'}}>Likes: {post.likes.toString()}</p>
@@ -238,10 +282,7 @@ function SocialMediaComponent() {
         </div>
       </div>
 
-      <div className="mt-5">
-        {/* <img src={logo} alt="Logo" className="img-fluid" /> */}
-      </div>
-      
+    
     </div>
   );
 }
