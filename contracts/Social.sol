@@ -1,12 +1,16 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.0;
+pragma solidity ^0.8.0;
 
-contract SocialMedia {
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
+
+contract SocialMedia is Ownable, Pausable {
+    using SafeMath for uint256;
+
     address public owner;
 
     struct User {
         string username;
-        address userAddress;
         bool isRegistered;
     }
 
@@ -32,7 +36,7 @@ contract SocialMedia {
     Post[] public posts;
 
     event UserRegistered(address indexed userAddress, string username);
-    event PostCreated(address indexed author, string content, uint256 timestamp);
+    event PostCreated(address indexed author, uint256 indexed postId, uint256 timestamp);
     event PostLiked(address indexed liker, uint256 indexed postId);
     event CommentAdded(address indexed commenter, uint256 indexed postId, string content, uint256 timestamp);
 
@@ -41,8 +45,8 @@ contract SocialMedia {
         _;
     }
 
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Only owner can call this function");
+    modifier onlyPostAuthor(uint256 _postId) {
+        require(posts[_postId].author == msg.sender, "Only the post author can perform this action");
         _;
     }
 
@@ -50,28 +54,22 @@ contract SocialMedia {
         owner = msg.sender;
     }
 
-    function registerUser(string memory _username) external {
+    function registerUser(string memory _username) external whenNotPaused {
         require(!users[msg.sender].isRegistered, "User is already registered");
         require(bytes(_username).length > 0, "Username should not be empty");
 
         users[msg.sender] = User({
             username: _username,
-            userAddress: msg.sender,
             isRegistered: true
         });
 
         emit UserRegistered(msg.sender, _username);
     }
 
-    
-    function getUserByAddress(address _userAddress) external view returns (User memory) {
-        require(users[_userAddress].isRegistered, "User not found");
-        return users[_userAddress];
-    }
-
-    function createPost(string memory _content) external onlyRegisteredUser {
+    function createPost(string memory _content) external onlyRegisteredUser whenNotPaused {
         require(bytes(_content).length > 0, "Content should not be empty");
 
+        uint256 postId = posts.length;
         posts.push(Post({
             author: msg.sender,
             content: _content,
@@ -80,10 +78,10 @@ contract SocialMedia {
             commentsCount: 0
         }));
 
-        emit PostCreated(msg.sender, _content, block.timestamp);
+        emit PostCreated(msg.sender, postId, block.timestamp);
     }
 
-    function likePost(uint256 _postId) external onlyRegisteredUser {
+    function likePost(uint256 _postId) external onlyRegisteredUser whenNotPaused {
         require(_postId < posts.length, "Post does not exist");
 
         Post storage post = posts[_postId];
@@ -92,7 +90,7 @@ contract SocialMedia {
         emit PostLiked(msg.sender, _postId);
     }
 
-    function addComment(uint256 _postId, string memory _content) external onlyRegisteredUser {
+    function addComment(uint256 _postId, string memory _content) external onlyRegisteredUser whenNotPaused {
         require(_postId < posts.length, "Post does not exist");
         require(bytes(_content).length > 0, "Comment should not be empty");
 
@@ -135,5 +133,13 @@ contract SocialMedia {
 
         Comment memory comment = postComments[_postId][_commentId];
         return (comment.commenter, comment.content, comment.timestamp);
+    }
+
+    function pauseContract() external onlyOwner {
+        _pause();
+    }
+
+    function unpauseContract() external onlyOwner {
+        _unpause();
     }
 }
