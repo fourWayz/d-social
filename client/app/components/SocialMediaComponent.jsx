@@ -17,62 +17,66 @@ function SocialMediaComponent() {
 
 
   useEffect(() => {
-    async function connectToWallet() {
-      try {
-        if (window.ethereum) {
-          const provider = new ethers.providers.Web3Provider(window.ethereum);
-          await provider.send('eth_requestAccounts', []);
-          setWallet(provider.getSigner());
-          setIsLoading(false);
-        } else {
-          throw new Error('Wallet connection not available.');
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    }
-    
     connectToWallet();
   }, []);
 
   // fetch registered user onMount
   useEffect(() => {
-    async function fetchRegisteredUser() {
-      try {
-        if (wallet) {
-          const address = await wallet.getAddress();
-          const user = await contract.getUserByAddress(address);
-          console.log(user);
-          if (user) {
-            setRegisteredUser(user);
-          }
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    }
-
     fetchRegisteredUser();
   }, [wallet]);
 
   // fetch post onMount
   useEffect(() => {
-    async function fetchPosts() {
-      try {
-        await getPosts();
-      } catch (error) {
-        console.error(error);
-        setMessage(error.message);
-      }
-    }
-
     if (contract) {
       fetchPosts();
     }
   }, [contract]);
 
+  // wallet connect functionality
+  const connectToWallet = async function () {
+    try {
+      if (window.ethereum) {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        await provider.send('eth_requestAccounts', []);
+        setWallet(provider.getSigner());
+        setIsLoading(false);
+      } else {
+        throw new Error('Wallet connection not available.');
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+  // fetch posts function
+  const fetchPosts = async function() {
+    try {
+      await getPosts();
+    } catch (error) {
+      console.error(error);
+      setMessage(error.message);
+    }
+  }
+
+  // register user function
+  const fetchRegisteredUser = async function() {
+    try {
+      if (wallet) {
+
+        const address = await wallet.getAddress();
+        const user = await contract.getUserByAddress(address);
+        if (user) {
+          setRegisteredUser(user);
+        }
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  // user registration functionality
   const registerUser = async () => {
     try {
+      setMessage('Registering, please wait!')
       const address = await wallet.getAddress();
       const tx = await contract.registerUser(username, { from: address });
       await tx.wait()
@@ -85,8 +89,10 @@ function SocialMediaComponent() {
     }
   };
 
+  // creating post function
   const createPost = async () => {
     try {
+      setMessage('Creating post, please wait!')
       const tx = await contract.connect(wallet).createPost(content);
       await tx.wait()
       setMessage('Post created successfully.');
@@ -98,8 +104,10 @@ function SocialMediaComponent() {
     }
   };
 
+  // liking post function
   const likePost = async (postId) => {
     try {
+      setMessage('Liking post, please wait!')
       const tx = await contract.connect(wallet).likePost(postId);
       await tx.wait()
       setMessage('Post liked successfully.');
@@ -110,9 +118,10 @@ function SocialMediaComponent() {
     }
   };
 
-
+  // adding comment function
   const addComment = async (postId, comment) => {
     try {
+      setMessage('Adding comment, please wait!')
       const tx = await contract.connect(wallet).addComment(postId, comment);
       await tx.wait()
       setMessage('Comment added successfully.');
@@ -124,9 +133,10 @@ function SocialMediaComponent() {
     }
   };
 
+  // getting posts function
   const getPosts = async () => {
     try {
-      const count = await contract.getPostsCount();
+      const count = await contract.getPostsCount(); 
       const fetchedPosts = [];
       for (let i = 0; i < count; i++) {
         const post = await contract.getPost(i);
