@@ -9,6 +9,6 @@ export function getEthersProvider() {
     return provider
   } else {
     // Fall back to a JSON-RPC provider
-    return new ethers.providers.JsonRpcProvider('https://alfajores-forno.celo-testnet.org');
+    return new ethers.providers.JsonRpcProvider('https://rpc-kura.cross.technology');
   }
 }
