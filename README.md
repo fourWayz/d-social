@@ -1,4 +1,4 @@
-# d-social Smart Contract
+# d-social 
 
 ## Overview
 
