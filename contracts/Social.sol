@@ -37,9 +37,10 @@ contract SocialMedia {
     event CommentAdded(address indexed commenter, uint256 indexed postId, string content, uint256 timestamp);
 
     modifier onlyRegisteredUser() {
-        require(users[msg.sender].isRegistered, "User is not registered");
-        _;
-    }
+    require(users[msg.sender].isRegistered, "User is not registered");
+    _;
+}
+
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Only owner can call this function");
@@ -51,17 +52,29 @@ contract SocialMedia {
     }
 
     function registerUser(string memory _username) external {
-        require(!users[msg.sender].isRegistered, "User is already registered");
-        require(bytes(_username).length > 0, "Username should not be empty");
+    require(!users[msg.sender].isRegistered, "User is already registered");
+    require(bytes(_username).length > 0, "Username should not be empty");
+    require(bytes(_username).length <= 32, "Username should not exceed 32 characters");
 
-        users[msg.sender] = User({
-            username: _username,
-            userAddress: msg.sender,
-            isRegistered: true
-        });
-
-        emit UserRegistered(msg.sender, _username);
+    // Check if the username is already taken
+    bool isUsernameTaken = false;
+    for (uint256 i = 0; i < posts.length; i++) {
+        if (keccak256(bytes(users[posts[i].author].username)) == keccak256(bytes(_username))) {
+            isUsernameTaken = true;
+            break;
+        }
     }
+    require(!isUsernameTaken, "Username is already taken");
+
+    users[msg.sender] = User({
+        username: _username,
+        userAddress: msg.sender,
+        isRegistered: true
+    });
+
+    emit UserRegistered(msg.sender, _username);
+}
+
 
     
     function getUserByAddress(address _userAddress) external view returns (User memory) {
@@ -70,18 +83,19 @@ contract SocialMedia {
     }
 
     function createPost(string memory _content) external onlyRegisteredUser {
-        require(bytes(_content).length > 0, "Content should not be empty");
+    require(bytes(_content).length > 0, "Content should not be empty");
+    require(bytes(_content).length <= 280, "Content should not exceed 280 characters");
 
-        posts.push(Post({
-            author: msg.sender,
-            content: _content,
-            timestamp: block.timestamp,
-            likes: 0,
-            commentsCount: 0
-        }));
+    posts.push(Post({
+        author: msg.sender,
+        content: _content,
+        timestamp: block.timestamp,
+        likes: 0,
+        commentsCount: 0
+    }));
 
-        emit PostCreated(msg.sender, _content, block.timestamp);
-    }
+    emit PostCreated(msg.sender, _content, block.timestamp);
+}
 
     function likePost(uint256 _postId) external onlyRegisteredUser {
         require(_postId < posts.length, "Post does not exist");
@@ -93,21 +107,23 @@ contract SocialMedia {
     }
 
     function addComment(uint256 _postId, string memory _content) external onlyRegisteredUser {
-        require(_postId < posts.length, "Post does not exist");
-        require(bytes(_content).length > 0, "Comment should not be empty");
+    require(_postId < posts.length, "Post does not exist");
+    require(bytes(_content).length > 0, "Comment should not be empty");
+    require(bytes(_content).length <= 200, "Comment should not exceed 200 characters");
 
-        uint256 commentId = postCommentsCount[_postId];
-        postComments[_postId][commentId] = Comment({
-            commenter: msg.sender,
-            content: _content,
-            timestamp: block.timestamp
-        });
+    uint256 commentId = postCommentsCount[_postId];
+    postComments[_postId][commentId] = Comment({
+        commenter: msg.sender,
+        content: _content,
+        timestamp: block.timestamp
+    });
 
-        postCommentsCount[_postId]++;
-        posts[_postId].commentsCount++;
+    postCommentsCount[_postId]++;
+    posts[_postId].commentsCount++;
 
-        emit CommentAdded(msg.sender, _postId, _content, block.timestamp);
-    }
+    emit CommentAdded(msg.sender, _postId, _content, block.timestamp);
+}
+
 
     function getPostsCount() external view returns (uint256) {
         return posts.length;
